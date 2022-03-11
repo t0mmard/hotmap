@@ -1,3 +1,5 @@
+package hu.hotmap.model;
+
 import com.beust.jcommander.Parameter;
 
 public class Arguments {

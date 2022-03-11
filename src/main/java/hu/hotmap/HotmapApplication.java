@@ -1,4 +1,7 @@
+package hu.hotmap;
+
 import com.beust.jcommander.JCommander;
+import hu.hotmap.model.Arguments;
 
 public class HotmapApplication {
 
