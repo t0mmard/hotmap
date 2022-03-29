@@ -19,7 +19,7 @@ public class HotmapApplication {
         var values = algorithm.run(bands);
 
         Printer printer = new Printer();
-        var img = printer.createBufferedImage(values);
+        var img = printer.createBufferedImage(values, bands);
         printer.writeImgToFile(img, args.outputFile);
     }
 
