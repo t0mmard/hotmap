@@ -68,7 +68,6 @@ public class NovelAlgorithm {
                                 cluster[x][y] = ++currentCluster;
                             }
                         } else if (y == 0 && x == cluster.length - 1) {
-                            System.out.println(x);
                             if (cluster[x - 1][y] != null) {
                                 cluster[x][y] = cluster[x - 1][y];
                             } else if (cluster[x + 1][y] != null) {
