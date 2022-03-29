@@ -23,4 +23,7 @@ public class Arguments {
 
     @Parameter(names = {"-sc", "-skipClustering"}, description = "Skip clustering (candidates will show up as yellow)")
     public Boolean skipClustering = false;
+
+    @Parameter(names = {"-bg", "-showBackground"}, description = "Skip clustering (candidates will show up as yellow)")
+    public Boolean showBackground = false;
 }

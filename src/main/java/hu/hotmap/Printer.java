@@ -20,9 +20,12 @@ public class Printer {
         for (int x = 0; x < img.getWidth(); ++x) {
             for (int y = 0; y < img.getHeight(); ++y) {
                 if (values[x][y] == null) {
-                    Integer rgbValue = (int) (bands.getBand5Raster().getPixel(x,y)[0].doubleValue() / LANDSAT_MAX_DN * 255);
-                    img.setRGB(x,y, new Color(rgbValue,rgbValue,rgbValue).getRGB());
-//                    img.setRGB(x,y, Color.BLACK.getRGB());
+                    if (HotmapApplication.args.showBackground) {
+                        var rgbValue = (int) (Math.round(bands.getBand5Raster().getPixel(x, y)[0].doubleValue() / LANDSAT_MAX_DN * 255));
+                        img.setRGB(x, y, new Color(rgbValue, rgbValue, rgbValue).getRGB());
+                    } else {
+                        img.setRGB(x, y, Color.BLACK.getRGB());
+                    }
                 }
                 else if ( values[x][y] == PixelType.Hot) {
                     img.setRGB(x,y, Color.RED.getRGB());
