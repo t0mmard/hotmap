@@ -150,7 +150,7 @@ public class NovelAlgorithm {
     }
 
     public boolean calculateBeta (double band5TOA, double band6TOA, double band6DN, double band7DN) {
-        return ((band6TOA/band5TOA >= 2) && (band6TOA == 0.5) || (band6DN == 65535) || (band7DN >=  65535) || (band6DN == 0) || (band7DN =q= 0));
+        return ((band6TOA/band5TOA >= 2) && (band6TOA == 0.5) || (band6DN == 65535) || (band7DN >=  65535) || (band6DN == 0) || (band7DN == 0));
     }
     /* A max vagy a null értéket vesszük túlszaturáltnak:
     When the detectors in a sensor view an object that is too bright, they record a flat value of 255 in the 8-bit data from the Landsat satellites (known as saturation). However, when the object viewed is much brighter than the sensor can handle, a semiconductor effect in the detectors causes an artifact known as Oversaturation.
