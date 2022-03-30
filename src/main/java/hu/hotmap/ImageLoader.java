@@ -2,12 +2,11 @@ package hu.hotmap;
 
 
 import hu.hotmap.model.Bands;
-import lombok.extern.slf4j.Slf4j;
 import mil.nga.tiff.FileDirectory;
 import mil.nga.tiff.TIFFImage;
 import mil.nga.tiff.TiffReader;
 
-import java.util.List;
+import java.util.*;
 
 public class ImageLoader {
 
@@ -56,7 +55,6 @@ public class ImageLoader {
             }
         }
         System.out.println("\tTOA values calculated.\n");
-
         return bands;
     }
 
@@ -65,5 +63,24 @@ public class ImageLoader {
         bands.getBand6TOA()[x][y] =  bands.getBand6Raster().getPixel(x,y)[0].doubleValue() * REFLECTANCE_MULT_6 + REFLECTANCE_ADD_6;
         bands.getBand7TOA()[x][y] =  bands.getBand7Raster().getPixel(x,y)[0].doubleValue() * REFLECTANCE_MULT_7 + REFLECTANCE_ADD_7;
     }
+
+    /*void getPercentiles(Bands bands) {
+        ArrayList<Double> flatArray = new ArrayList<>();
+        for (Double[] array : bands.getBand6TOA()) {
+            flatArray.addAll(Arrays.asList(array));
+        }
+        Collections.sort(flatArray);
+        Collections.reverse(flatArray);
+        bands.setUpperSaturationB6(flatArray.get((int) Math.round(1 / 1000.0 * (flatArray.size() - 1))));
+
+        flatArray = new ArrayList<>();
+        for (Double[] array : bands.getBand7TOA()) {
+            flatArray.addAll(Arrays.asList(array));
+        }
+        Collections.sort(flatArray);
+        Collections.reverse(flatArray);
+        bands.setUpperSaturationB7(flatArray.get((int) Math.round(1 / 1000.0 * (flatArray.size() - 1))));
+
+    }*/
 
 }

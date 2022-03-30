@@ -28,7 +28,6 @@ public class NovelAlgorithm {
         System.out.println("\tAlpha and Beta values calculated:");
         System.out.println("\t\tAlpha pixels: " + hot);
         System.out.println("\t\tBeta pixels: " + candidate + "\n");
-
         if (!HotmapApplication.args.skipClustering) {
             Integer[][] cluster = new Integer[values.length][values[0].length];
             ArrayList<Integer> clustersToKeep = new ArrayList<>();
@@ -38,7 +37,7 @@ public class NovelAlgorithm {
                 for (int y = 0; y < cluster[0].length; ++y) {
                     if (values[x][y] != null) {
                         if (x == 0 && y == 0) {
-                            cluster[x][y] = currentCluster;
+                            cluster[x][y] = ++currentCluster;
                         } else if (x == 0 && y < cluster[0].length - 1) {
                             if (cluster[x][y - 1] != null) {
                                 cluster[x][y] = cluster[x][y - 1];
@@ -58,33 +57,39 @@ public class NovelAlgorithm {
                                 cluster[x][y] = ++currentCluster;
                             }
                         } else if (y == cluster[0].length - 1 && x < cluster.length - 1) {
-                            if (cluster[x - 1][y] != null) {
+                            if (cluster[x-1][y-1] != null){
+                                cluster[x][y] = cluster[x-1][y-1];
+                            } else if (cluster[x - 1][y] != null) {
                                 cluster[x][y] = cluster[x - 1][y];
                             } else if (cluster[x][y - 1] != null) {
                                 cluster[x][y] = cluster[x][y - 1];
-                            } else if (cluster[x + 1][y] != null) {
-                                cluster[x][y] = cluster[x + 1][y];
                             } else {
                                 cluster[x][y] = ++currentCluster;
                             }
                         } else if (y == 0 && x == cluster.length - 1) {
                             if (cluster[x - 1][y] != null) {
                                 cluster[x][y] = cluster[x - 1][y];
-                            } else if (cluster[x + 1][y] != null) {
-                                cluster[x][y] = cluster[x + 1][y];
                             } else {
                                 cluster[x][y] = ++currentCluster;
                             }
                         } else if (x == cluster.length - 1 && y < cluster[0].length - 1) {
-                            if (cluster[x - 1][y] != null) {
+                            if (cluster[x-1][y-1] != null){
+                                cluster[x][y] = cluster[x-1][y-1];
+                            }
+                            else if (cluster[x - 1][y] != null) {
                                 cluster[x][y] = cluster[x - 1][y];
+                            }else if (cluster[x - 1][y + 1] != null) {
+                                cluster[x][y] = cluster[x - 1][y + 1];
                             } else if (cluster[x][y - 1] != null) {
                                 cluster[x][y] = cluster[x][y - 1];
                             } else {
                                 cluster[x][y] = ++currentCluster;
                             }
                         } else if (y == cluster[0].length - 1 && x == cluster.length - 1) {
-                            if (cluster[x - 1][y] != null) {
+                            if (cluster[x-1][y-1] != null) {
+                                cluster[x][y] = cluster[x-1][y-1];
+                            }
+                            else if (cluster[x - 1][y] != null) {
                                 cluster[x][y] = cluster[x - 1][y];
                             } else if (cluster[x][y - 1] != null) {
                                 cluster[x][y] = cluster[x][y - 1];
@@ -92,14 +97,14 @@ public class NovelAlgorithm {
                                 cluster[x][y] = ++currentCluster;
                             }
                         } else if (x > 0 && y > 0 && x < cluster.length - 1 && y < cluster[0].length - 1) {
-                            if (cluster[x - 1][y] != null) {
+                            if (cluster[x-1][y-1] != null){
+                                cluster[x][y] = cluster[x-1][y-1];
+                            } else if (cluster[x - 1][y] != null) {
                                 cluster[x][y] = cluster[x - 1][y];
+                            } else if (cluster[x - 1][y + 1] != null) {
+                                cluster[x][y] = cluster[x - 1][y + 1];
                             } else if (cluster[x][y - 1] != null) {
                                 cluster[x][y] = cluster[x][y - 1];
-                            } else if (cluster[x + 1][y] != null) {
-                                cluster[x][y] = cluster[x + 1][y];
-                            } else if (cluster[x][y + 1] != null) {
-                                cluster[x][y] = cluster[x][y + 1];
                             } else {
                                 cluster[x][y] = ++currentCluster;
                             }
@@ -145,6 +150,13 @@ public class NovelAlgorithm {
     }
 
     public boolean calculateBeta (double band5TOA, double band6TOA, double band6DN, double band7DN) {
-        return ((band6TOA/band5TOA >= 2) && (band6TOA >= 0.5) || (band6DN >=  65535) || (band7DN >=  65535) || (band6DN == 0) || (band7DN ==  0));
+        return ((band6TOA/band5TOA >= 2) && (band6TOA == 0.5) || (band6DN == 65535) || (band7DN >=  65535) || (band6DN == 0) || (band7DN =q= 0));
     }
+    /* A max vagy a null értéket vesszük túlszaturáltnak:
+    When the detectors in a sensor view an object that is too bright, they record a flat value of 255 in the 8-bit data from the Landsat satellites (known as saturation). However, when the object viewed is much brighter than the sensor can handle, a semiconductor effect in the detectors causes an artifact known as Oversaturation.
+
+    In general, Oversaturation causes the detector to cease operating correctly for a short time, returning null values (or occasionally, quick oscillations between 0 and 255). Sometimes, a crosstalk effect occurs, creating brief periods of noise in other non-saturated detectors in the affected band.
+    https://www.usgs.gov/landsat-missions/oversaturation#:~:text=When%20the%20detectors%20in%20a,satellites%20(known%20as%20saturation).
+    */
+
 }

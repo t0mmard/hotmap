@@ -12,4 +12,10 @@ public class Bands {
     private Double[][] band5TOA;
     private Double[][] band6TOA;
     private Double[][] band7TOA;
+
+    private double lowerSaturationB6;
+    private double upperSaturationB6;
+
+    private double lowerSaturationB7;
+    private double upperSaturationB7;
 }
