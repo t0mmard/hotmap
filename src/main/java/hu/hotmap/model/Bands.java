@@ -5,17 +5,12 @@ import mil.nga.tiff.Rasters;
 
 @Data
 public class Bands {
-    private Rasters band5Raster;
-    private Rasters band6Raster;
-    private Rasters band7Raster;
+    private Rasters raster;
 
-    private Double[][] band5TOA;
-    private Double[][] band6TOA;
-    private Double[][] band7TOA;
+    private Double[][] band5TOAReflectance;
+    private Double[][] band6TOAReflectance;
+    private Double[][] band7TOAReflectance;
 
-    private double lowerSaturationB6;
-    private double upperSaturationB6;
-
-    private double lowerSaturationB7;
-    private double upperSaturationB7;
+    private Double[][] band6TOARadiance;
+    private Double[][] band7TOARadiance;
 }

@@ -2,25 +2,50 @@ package hu.hotmap;
 
 import hu.hotmap.model.Bands;
 import hu.hotmap.model.PixelType;
+import javafx.util.Pair;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class NovelAlgorithm {
+
+    double REFLECTANCE_MULT_5 = 2.0000E-05;
+    double REFLECTANCE_MULT_6 = 2.0000E-05;
+    double REFLECTANCE_MULT_7 = 2.0000E-05;
+
+    double REFLECTANCE_ADD_5 = -0.100000;
+    double REFLECTANCE_ADD_6 = -0.100000;
+    double REFLECTANCE_ADD_7 = -0.100000;
+
     public PixelType[][] run(Bands bands) {
+
         System.out.println("Running novel algorithm:");
+        System.out.println("\tCalculating TOA reflectance values.");
+
+        bands.setBand5TOAReflectance(new Double[bands.getRaster().getWidth()][bands.getRaster().getHeight()]);
+        bands.setBand6TOAReflectance(new Double[bands.getRaster().getWidth()][bands.getRaster().getHeight()]);
+        bands.setBand7TOAReflectance(new Double[bands.getRaster().getWidth()][bands.getRaster().getHeight()]);
+
+        for (int x = 0; x<bands.getRaster().getWidth(); ++x) {
+            for (int y = 0; y<bands.getRaster().getHeight(); ++y){
+                createTOAReflectance(bands,x,y);
+            }
+        }
+        System.out.println("\tTOA values calculated.\n");
+
         int hot = 0;
         int candidate = 0;
-        var values = new PixelType[bands.getBand5Raster().getWidth()][bands.getBand5Raster().getHeight()];
+        var values = new PixelType[bands.getRaster().getWidth()][bands.getRaster().getHeight()];
         System.out.println("\tSearching for alpha and beta values.\n");
         for (int x = 0; x < values.length; ++x) {
             for (int y = 0; y < values[0].length; ++y) {
-                if (calculateAlpha(bands.getBand5TOA()[x][y], bands.getBand6TOA()[x][y], bands.getBand7TOA()[x][y])){
+                if (calculateAlpha(bands.getBand5TOAReflectance()[x][y], bands.getBand6TOAReflectance()[x][y], bands.getBand7TOAReflectance()[x][y])){
                     values[x][y] = PixelType.Hot;
                     hot++;
                 }
-                else if (calculateBeta(bands.getBand5TOA()[x][y], bands.getBand6TOA()[x][y],
-                        bands.getBand6Raster().getPixel(x,y)[0].doubleValue(), bands.getBand7Raster().getPixel(x,y)[0].doubleValue())) {
+                else if (calculateBeta(bands.getBand5TOAReflectance()[x][y], bands.getBand6TOAReflectance()[x][y],
+                        bands.getRaster().getPixel(x,y)[1].doubleValue(), bands.getRaster().getPixel(x,y)[2].doubleValue())) {
                     values[x][y] = PixelType.Candidate;
                     candidate++;
                 }
@@ -36,8 +61,6 @@ public class NovelAlgorithm {
             var cluster = createCluster(values, clustersToKeep, currentCluster);
             System.out.println("\t\tNumber of clusters:" + currentCluster);
             System.out.println("\t\tNumber of non-associated false alarms (clusters):" + (currentCluster.get() - clustersToKeep.size()) + "\n");
-            System.out.println(currentCluster.get());
-            System.out.println(clustersToKeep.size());
             System.out.println("\t Demoting and promoting pixels:");
             int demotions = 0;
             int promotions = 0;
@@ -58,9 +81,23 @@ public class NovelAlgorithm {
             System.out.println("Clustering skipped.\n");
         }
 
+        clearTOA(bands);
+
         System.out.println("Novel algorithm finished.\n");
 
         return values;
+    }
+
+    void clearTOA(Bands bands) {
+        bands.setBand5TOAReflectance(null);
+        bands.setBand6TOAReflectance(null);
+        bands.setBand7TOAReflectance(null);
+    }
+
+    void createTOAReflectance(Bands bands, int x, int y){
+        bands.getBand5TOAReflectance()[x][y] = bands.getRaster().getPixel(x,y)[0].doubleValue() * REFLECTANCE_MULT_5 + REFLECTANCE_ADD_5;
+        bands.getBand6TOAReflectance()[x][y] = bands.getRaster().getPixel(x,y)[1].doubleValue() * REFLECTANCE_MULT_6 + REFLECTANCE_ADD_6;
+        bands.getBand7TOAReflectance()[x][y] = bands.getRaster().getPixel(x,y)[2].doubleValue() * REFLECTANCE_MULT_7 + REFLECTANCE_ADD_7;
     }
 
     public boolean calculateAlpha (double band5TOA, double band6TOA, double band7TOA) {
@@ -68,7 +105,7 @@ public class NovelAlgorithm {
     }
 
     public boolean calculateBeta (double band5TOA, double band6TOA, double band6DN, double band7DN) {
-        return ((band6TOA/band5TOA >= 2) && (band6TOA == 0.5) || (band6DN == 65535) || (band7DN >=  65535));// || (band6DN == 0) || (band7DN == 0));
+        return ((band6TOA/band5TOA >= 2) && (band6TOA == 0.5) || (band6DN == 65535) || (band7DN >=  65535)) || (band6DN == 0) || (band7DN == 0);
     }
     /* A max vagy a null értéket vesszük túlszaturáltnak:
     When the detectors in a sensor view an object that is too bright, they record a flat value of 255 in the 8-bit data from the Landsat satellites (known as saturation). However, when the object viewed is much brighter than the sensor can handle, a semiconductor effect in the detectors causes an artifact known as Oversaturation.
@@ -91,13 +128,35 @@ public class NovelAlgorithm {
         return cluster;
     }
 
-    private static void dfs(Integer[][] cluster, PixelType[][] values, int x,int y, int currentCluster, ArrayList<Integer> clustersToKeep){
-        if(x < 0 || x == cluster.length || y < 0 || y == cluster[0].length || values[x][y] == null || cluster[x][y] != null) return;
-        if (values[x][y] == PixelType.Hot && !clustersToKeep.contains(currentCluster)) clustersToKeep.add(currentCluster);
-        cluster[x][y] = currentCluster;
-        dfs(cluster, values,x-1,y, currentCluster, clustersToKeep);
-        dfs(cluster,values, x+1,y, currentCluster, clustersToKeep);
-        dfs(cluster,values, x,y-1, currentCluster, clustersToKeep);
-        dfs(cluster,values, x,y+1, currentCluster, clustersToKeep);
+    private void dfs(Integer[][] cluster, PixelType[][] values, int x,int y, int currentCluster, ArrayList<Integer> clustersToKeep){
+        var stack = new Stack<Pair<Integer,Integer>>();
+
+        var starter = new Pair<Integer,Integer>(x,y);
+        stack.push(starter);
+
+        while (!stack.isEmpty()) {
+            var obj = stack.pop();
+
+            if(obj.getKey() < 0 || obj.getKey() == cluster.length || obj.getValue() < 0 || obj.getValue() == cluster[0].length ||
+                    values[obj.getKey()][obj.getValue()] == null || cluster[obj.getKey()][obj.getValue()] != null){
+                continue;
+            }
+            else if (values[obj.getKey()][obj.getValue()] == PixelType.Hot && !clustersToKeep.contains(currentCluster)){
+                clustersToKeep.add(currentCluster);
+            }
+            cluster[obj.getKey()][obj.getValue()] = currentCluster;
+            stack.push(new Pair<Integer,Integer>(obj.getKey(), obj.getValue()+1));
+            stack.push(new Pair<Integer,Integer>(obj.getKey(), obj.getValue()-1));
+            stack.push(new Pair<Integer,Integer>(obj.getKey()+1, obj.getValue()));
+            stack.push(new Pair<Integer,Integer>(obj.getKey()-1, obj.getValue()));
+        }
+//        if(x < 0 || x == cluster.length || y < 0 || y == cluster[0].length || values[x][y] == null || cluster[x][y] != null) return;
+//        if (values[x][y] == PixelType.Hot && !clustersToKeep.contains(currentCluster)) clustersToKeep.add(currentCluster);
+//        cluster[x][y] = currentCluster;
+//        dfs(cluster, values,x-1,y, currentCluster, clustersToKeep);
+//        dfs(cluster,values, x+1,y, currentCluster, clustersToKeep);
+//        dfs(cluster,values, x,y-1, currentCluster, clustersToKeep);
+//        dfs(cluster,values, x,y+1, currentCluster, clustersToKeep);
     }
+
 }
